@@ -12,11 +12,25 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
-        release {
+        debug {
             minifyEnabled false
+            applicationIdSuffix = ".debug"
+        }
+        release {
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    flavorDimensions "environment"
+    productFlavors {
+        mock {
+            applicationIdSuffix = ".mock"
+        }
+        product {
+            applicationId defaultConfig.applicationId
+        }
+    }
+
     compileOptions {
         sourceCompatibility = '1.8'
         targetCompatibility = '1.8'

@@ -1,14 +1,11 @@
 package com.k4dnikov.addpolygon.data.repository;
 
-
 import com.google.android.gms.maps.model.LatLng;
 import com.k4dnikov.addpolygon.App;
 import com.k4dnikov.addpolygon.data.model.MarkerDto;
 import com.k4dnikov.addpolygon.data.retrofit.MarkersService;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;

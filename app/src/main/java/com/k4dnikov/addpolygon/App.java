@@ -1,20 +1,12 @@
 package com.k4dnikov.addpolygon;
 
 import android.app.Application;
-import android.content.res.AssetManager;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.k4dnikov.addpolygon.common.AppConstants;
-import com.k4dnikov.addpolygon.common.HttpResponseMockCreator;
-
-import java.io.BufferedReader;
+import com.k4dnikov.addpolygon.common.MockHelper;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-
 import javax.net.ssl.HttpsURLConnection;
-
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import okhttp3.Interceptor;
@@ -41,21 +33,20 @@ public class App extends Application {
     }
 
     private void initRetrofit() {
-
         Gson gson = new GsonBuilder().create();
-
         MockIntercepter mockIntercepter = new MockIntercepter();
 
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .addInterceptor(mockIntercepter)
                 .build();
-
-        sRetrofit = new Retrofit.Builder()
+        Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
                 .baseUrl(AppConstants.BASE_URL)
-//                .client(okHttpClient)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .build();
+                .addConverterFactory(GsonConverterFactory.create(gson));
 
+        if (BuildConfig.FLAVOR == "mock") {
+            retrofitBuilder.client(okHttpClient);
+        }
+        sRetrofit = retrofitBuilder.build();
     }
 
     private void initRealm() {
@@ -77,7 +68,7 @@ public class App extends Application {
         public Response intercept(Chain chain) throws IOException {
             if (BuildConfig.DEBUG) {
                 String uri = chain.request().url().uri().toString();
-                String response = HttpResponseMockCreator.createMock(instance, uri);
+                String response = MockHelper.createMock(instance, uri);
 
                 return chain.proceed(chain.request())
                         .newBuilder().code(HttpsURLConnection.HTTP_OK)

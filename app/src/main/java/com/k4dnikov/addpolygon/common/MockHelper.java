@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-public class HttpResponseMockCreator  {
+public class MockHelper {
 
     public static String createMock(Context ctx, String uri) throws IOException {
         if(uri.contains("/get_markers")){
