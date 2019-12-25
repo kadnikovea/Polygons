@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName;
 
 public class MarkerDto {
 
+    @SerializedName("id")
     private long id;
 
     @SerializedName("lat")

@@ -70,12 +70,10 @@ public class MapPresenter implements Presenter {
         mRepositoryMarkers.getMarkers(new RepositoryMarkers.OnMarkersResponce() {
             @Override
             public void onResponce(List<LatLng> markers) {
-
-                if (markers == null)
+                if (markers == null){
                     return;
-
+                }
                 mViewMap.showMarkers(markers);
-
             }
 
             @Override
@@ -91,25 +89,18 @@ public class MapPresenter implements Presenter {
 
     @Override
     public void loadPolygons() {
-
         List<PolygonEntity> polygons = mRepositoryPolygons.getPolygons();
-
-        System.out.println("xxxxx polygons " + (polygons == null));
-
-        if (polygons == null)
+        if (polygons == null){
             return;
-
+        }
         mViewMap.showPolygons(polygons);
-
     }
 
     @Override
     public void onMapClick(LatLng latLng) {
-
         if (mMode == Mode.ADD_REGION_MODE) {
             mViewMap.addPoint(latLng);
         }
-
     }
 
     enum Mode {

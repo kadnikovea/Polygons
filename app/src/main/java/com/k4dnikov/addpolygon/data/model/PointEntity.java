@@ -12,8 +12,7 @@ public class PointEntity extends RealmObject {
 
     private double lon;
 
-    public PointEntity() {
-    }
+    public PointEntity() {}
 
     public void setId(long id) {
         this.id = id;

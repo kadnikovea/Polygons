@@ -6,11 +6,14 @@ import android.content.res.AssetManager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.k4dnikov.addpolygon.common.AppConstants;
+import com.k4dnikov.addpolygon.common.HttpResponseMockCreator;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -23,11 +26,9 @@ import okhttp3.ResponseBody;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-import static com.k4dnikov.addpolygon.common.AppConstants.SUCCESS_CODE;
-
 public class App extends Application {
 
-    public static App instance;
+    private static App instance;
 
     public static Retrofit sRetrofit;
 
@@ -58,11 +59,9 @@ public class App extends Application {
     }
 
     private void initRealm() {
-
         Realm.init(this);
         RealmConfiguration config = new RealmConfiguration.Builder().build();
         Realm.setDefaultConfiguration(config);
-
     }
 
     public static App getInstance() {
@@ -74,56 +73,24 @@ public class App extends Application {
     }
 
     class MockIntercepter implements Interceptor {
-
         @Override
         public Response intercept(Chain chain) throws IOException {
-            if(BuildConfig.DEBUG){
+            if (BuildConfig.DEBUG) {
                 String uri = chain.request().url().uri().toString();
-                String response;
-                if(uri.contains("/get_markers")){
+                String response = HttpResponseMockCreator.createMock(instance, uri);
 
-                    AssetManager assetManager = getAssets();
-                    InputStream is = assetManager.open("markerResponse.json");
-                    response = convertStreamToString(is);
-                }else {
-                    response = "";
-                }
+                return chain.proceed(chain.request())
+                        .newBuilder().code(HttpsURLConnection.HTTP_OK)
+                        .protocol(Protocol.HTTP_2)
+                        .message(response)
+                        .body(ResponseBody.create(MediaType.parse("application/json"),
+                                response.getBytes()))
+                        .addHeader("content-type", "application/json")
+                        .build();
 
-            return chain.proceed(chain.request())
-                    .newBuilder().code(SUCCESS_CODE)
-                    .protocol(Protocol.HTTP_2)
-                    .message(response)
-                    .body(ResponseBody.create(MediaType.parse("application/json"),
-                            response.getBytes()))
-                    .addHeader("content-type", "application/json")
-                    .build();
-
-            }else {
+            } else {
                 throw new IllegalAccessError("Interceptor for debug purpose only");
             }
-
         }
-
-        private String convertStreamToString(InputStream is) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            StringBuilder sb = new StringBuilder();
-
-            String line = null;
-            try {
-                while ((line = reader.readLine()) != null) {
-                    sb.append(line).append('\n');
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    is.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            return sb.toString();
-        }
-
     }
 }

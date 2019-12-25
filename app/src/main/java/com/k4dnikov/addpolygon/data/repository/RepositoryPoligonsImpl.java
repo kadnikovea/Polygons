@@ -12,46 +12,46 @@ import io.realm.RealmResults;
 
 public class RepositoryPoligonsImpl implements RepositoryPoligons {
 
-    static Realm sRealm;
-
-
-    public RepositoryPoligonsImpl() {
-        sRealm = Realm.getDefaultInstance();
-    }
+    public RepositoryPoligonsImpl() {}
 
     @Override
     public List<PolygonEntity> getPolygons() {
-
-        RealmResults<PolygonEntity> polygonEntityRealmResults = sRealm.where(PolygonEntity.class).findAllAsync();
-
-        List<PolygonEntity> polygonEntityList = sRealm.copyFromRealm(polygonEntityRealmResults);
-
-        return polygonEntityList;
-
+        Realm realm = Realm.getDefaultInstance();
+        try {
+            realm.beginTransaction();
+            RealmResults<PolygonEntity> polygonEntityRealmResults = realm.where(PolygonEntity.class).findAllAsync();
+            realm.commitTransaction();
+            realm.beginTransaction();
+            List<PolygonEntity> polygonEntityList = realm.copyFromRealm(polygonEntityRealmResults);
+            realm.commitTransaction();
+            realm.close();
+            return polygonEntityList;
+        } catch(Exception e) {
+            if(realm.isInTransaction()) {
+                realm.cancelTransaction();
+            }
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public void savePolygone(List<LatLng> points) {
-
-        sRealm.executeTransaction(realm -> {
-
-            PolygonEntity polygonEntity = sRealm.createObject(PolygonEntity.class, getPolygonNextKey());
-
+        Realm realm = Realm.getDefaultInstance();
+        realm.executeTransaction(realmLocal -> {
+            PolygonEntity polygonEntity = realmLocal.createObject(PolygonEntity.class, getPolygonNextKey(realm));
             for (LatLng latLng : points) {
-                PointEntity pointEntity = sRealm.createObject(PointEntity.class, getPointNextKey());
+                PointEntity pointEntity = realmLocal.createObject(PointEntity.class, getPointNextKey(realm));
                 pointEntity.setLat(latLng.latitude);
                 pointEntity.setLon(latLng.longitude);
                 polygonEntity.getPointEntities().add(pointEntity);
             }
-
         });
-
-
+        realm.close();
     }
 
-    public long getPolygonNextKey() {
+    private long getPolygonNextKey(Realm realm) {
         try {
-            Number number = sRealm.where(PolygonEntity.class).max("id");
+            Number number = realm.where(PolygonEntity.class).max("id");
             if (number != null) {
                 return number.longValue() + 1;
             } else {
@@ -62,9 +62,9 @@ public class RepositoryPoligonsImpl implements RepositoryPoligons {
         }
     }
 
-    public long getPointNextKey() {
+    private long getPointNextKey(Realm realm) {
         try {
-            Number number = sRealm.where(PointEntity.class).max("id");
+            Number number = realm.where(PointEntity.class).max("id");
             if (number != null) {
                 return number.longValue() + 1;
             } else {
@@ -74,5 +74,4 @@ public class RepositoryPoligonsImpl implements RepositoryPoligons {
             return 0;
         }
     }
-
 }
